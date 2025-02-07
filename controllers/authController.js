@@ -1,4 +1,4 @@
- const User = require("../models/User.js");
+ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -7,8 +7,10 @@ const jwt = require("jsonwebtoken");
     const { name, email,phone, password } = req.body;
 
     // Check if user exists
-    const existingUser = await User.findOne({ phone });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email or phone already registered" });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,8 +36,11 @@ const jwt = require("jsonwebtoken");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    user.last_login = new Date();
+    await user.save();
+
     // Generate JWT token
-    const token = jwt.sign({ id: user._id,name: user.name }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
     res.json({ message: "Login successful", user: { name: user.name, phone: user.phone } });
