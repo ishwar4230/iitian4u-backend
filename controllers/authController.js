@@ -42,8 +42,8 @@ const jwt = require("jsonwebtoken");
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
-    res.json({ message: "Login successful", user: { name: user.name, phone: user.phone } });
+    res.cookie("token", token, { httpOnly: false, secure: process.env.NODE_ENV === "production" });
+    res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
