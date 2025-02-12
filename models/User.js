@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   age: { type: Number, required: false },
   college: { type: String, required: false },
   college_year: { type: Number, required: false },
+  school: { type: String, required: false },
+  school_class: { type: Number, required: false },
   image: { type: String, required: false },
   last_login: { type: Date, required: false },
 
