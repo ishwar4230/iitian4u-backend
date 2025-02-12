@@ -15,11 +15,11 @@ const getProfile = async (req, res) => {
 // Update Profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone, gender, age, college, college_year, image } = req.body;
+    const { name, phone, email, gender, age, college, college_year, school, school_class, image } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { name, phone, gender, age, college, college_year, image },
+      { name, phone, email, gender, age, college, college_year,school, school_class, image },
       { new: true, runValidators: true }
     ).select("-password"); // Exclude password from response
 

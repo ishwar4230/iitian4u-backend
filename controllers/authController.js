@@ -26,8 +26,9 @@ const jwt = require("jsonwebtoken");
 
  const login = async (req, res) => {
   try {
+    console.log("login request came");
     const { phone, password } = req.body;
-
+    
     // Find user
     const user = await User.findOne({ phone });
     if (!user) return res.status(400).json({ message: "User not exist" });
@@ -45,6 +46,7 @@ const jwt = require("jsonwebtoken");
     res.cookie("token", token, { httpOnly: false, secure: process.env.NODE_ENV === "production" });
     res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
+    // console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 };
