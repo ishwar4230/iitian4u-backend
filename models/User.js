@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   school_class: { type: Number, required: false },
   image: { type: String, required: false },
   last_login: { type: Date, required: false },
-
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

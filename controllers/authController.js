@@ -26,7 +26,6 @@ const jwt = require("jsonwebtoken");
 
  const login = async (req, res) => {
   try {
-    console.log("login request came");
     const { phone, password } = req.body;
     
     // Find user
