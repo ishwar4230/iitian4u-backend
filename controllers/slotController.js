@@ -51,6 +51,14 @@ exports.bookSlot = async (req, res) => {
       return res.status(400).json({ error: "Slot is already booked" });
     }
 
+    const now_date = new Date();
+    const minTime = new Date(now_date.getTime() + 30 * 60 * 1000); // Now + 30 mins
+    const maxTime = new Date(now_date.getTime() + 168 * 60 * 60 * 1000); // Now + 168 hours
+
+    if (slot.start_time < minTime || slot.start_time > maxTime) {
+      return res.status(400).json({ error: "Slot time is outside the allowed booking window" });
+    }
+
     // Find the course_id based on type and name
     const course = await Course.findOne({ course_type, course_name });
     if (!course) {

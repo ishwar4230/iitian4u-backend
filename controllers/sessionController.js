@@ -5,6 +5,7 @@ const Course = require("../models/Course");
 exports.getUserSessions = async (req, res) => {
   try {
     const user_id = req.user.id; // Get user ID from authMiddleware
+    const now = new Date();
 
     // Fetch all sessions for the user
     const sessions = await Session.find({ user_id });
@@ -17,7 +18,7 @@ exports.getUserSessions = async (req, res) => {
       sessions.map(async (session) => {
         // Get slot details
         const slot = await Slot.findById(session.slot_id);
-        if (!slot) return null;
+        if (!slot || new Date(slot.start_time) < now) return null; // Skip past sessions
 
         // Convert slot time to IST
         const slotIST = new Date(slot.start_time).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
@@ -34,8 +35,12 @@ exports.getUserSessions = async (req, res) => {
       })
     );
 
-    // Filter out any null values (in case slot or course was missing)
+    // Filter out past or invalid sessions
     const filteredSessions = sessionData.filter((session) => session !== null);
+
+    if (filteredSessions.length === 0) {
+      return res.status(404).json({ message: "No upcoming sessions found" });
+    }
 
     res.json({ user_sessions: filteredSessions });
   } catch (error) {
