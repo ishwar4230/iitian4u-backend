@@ -42,7 +42,7 @@ const jwt = require("jsonwebtoken");
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.cookie("token", token, { httpOnly: false, secure: process.env.NODE_ENV === "production"});
+    res.cookie("token", token, { httpOnly: false, secure: process.env.NODE_ENV === "production",sameSite:'none', expires:token.expiresIn,domain: 'iitian4u-backend1.onrender.com'});
     res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
     // console.log(error.message);
