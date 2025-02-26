@@ -42,7 +42,13 @@ const jwt = require("jsonwebtoken");
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.cookie("token", token, { httpOnly: false, secure: process.env.NODE_ENV === "production",sameSite:'none', expires:token.expiresIn,domain: 'iitian4u-backend1.onrender.com'});
+    res.cookie("token", token, {
+       httpOnly: true,
+       secure: process.env.NODE_ENV === "production",
+       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+       sameSite: "None", // Required for cross-site cookies
+       domain: process.env.COOKIE_DOMAIN || "https://iitian4u-backend1.onrender.com" // Ensure proper domain handling
+      });
     res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
     // console.log(error.message);
@@ -51,8 +57,40 @@ const jwt = require("jsonwebtoken");
 };
 
  const logout = (req, res) => {
-  res.clearCookie("token");
+  try{
+  res.cookie("token","", {
+     httpOnly: true,
+     secure: process.env.NODE_ENV === "production",
+     sameSite: "None",
+     expires: new Date(0), // Expire immediately
+     domain: process.env.COOKIE_DOMAIN || "https://iitian4u-backend1.onrender.com"
+
+    });
   res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
-module.exports = { register, login, logout };
+const verify = (req, res) => {
+  try {
+    const token = req.cookies.token; // Read token from cookies
+
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized - No token found" });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ message: "Unauthorized - Invalid token" });
+      }
+
+      res.json({ userId: decoded.id }); // Return user ID if token is valid
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+module.exports = { register, login, logout, verify };

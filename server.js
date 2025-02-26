@@ -17,8 +17,14 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: ["https://iitians4u.in", "https://www.iitians4u.in","https://iitians4u.netlify.app"], credentials: true }));
-
+app.use(
+    cors({
+      origin: (origin, callback) => {
+        callback(null, true); // Dynamically allow all origins
+      },
+      credentials: true,
+    })
+  );
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/admin", adminRoutes);
