@@ -47,7 +47,6 @@ const jwt = require("jsonwebtoken");
        secure: process.env.NODE_ENV === "production",
        maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
        sameSite: "None", // Required for cross-site cookies
-       domain: process.env.COOKIE_DOMAIN || "https://iitian4u-backend1.onrender.com" // Ensure proper domain handling
       });
     res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
@@ -63,7 +62,6 @@ const jwt = require("jsonwebtoken");
      secure: process.env.NODE_ENV === "production",
      sameSite: "None",
      expires: new Date(0), // Expire immediately
-     domain: process.env.COOKIE_DOMAIN || "https://iitian4u-backend1.onrender.com"
 
     });
   res.json({ message: "Logged out successfully" });
