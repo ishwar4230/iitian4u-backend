@@ -19,9 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
     cors({
-      origin: (origin, callback) => {
-        callback(null, true); // Dynamically allow all origins
-      },
+      origin: ["https://iitians4u.in", "https://iitians4u.netlify.app/"], // Allow your frontend domains
       credentials: true,
     })
   );
