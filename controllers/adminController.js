@@ -3,6 +3,7 @@ const Plan = require("../models/Plan");
 const Price = require("../models/Price");
 const UserPlan = require("../models/UserPlan");
 const Slot = require("../models/Slot");
+const jwt = require("jsonwebtoken");
 
 const convertISTDateTimeToUTC = (dateString, timeString) => {
     const [year, month, day] = dateString.split("-").map(Number); // Extract YYYY-MM-DD
@@ -109,6 +110,7 @@ exports.addSlot = async (req, res) => {
       if (!start_date || !start_time) {
         return res.status(400).json({ message: "start_date and start_time are required" });
       }
+      // console.log(start_date,start_time);
   
       // Convert IST Date & Time to UTC
       const utcStartTime = convertISTDateTimeToUTC(start_date, start_time);
@@ -123,5 +125,26 @@ exports.addSlot = async (req, res) => {
     } catch (error) {
       console.error("Error adding slot:", error);
       res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+
+  exports.verifyAdminToken = (req, res) => {
+    const token = req.cookies.adminToken;
+  
+    if (!token) {
+      return res.json({ isAdmin: false });
+    }
+  
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  
+      // Check if the decoded ID matches the stored ADMIN_ID
+      if (decoded.id === process.env.ADMIN_ID) {
+        return res.json({ isAdmin: true });
+      } else {
+        return res.json({ isAdmin: false });
+      }
+    } catch (error) {
+      return res.json({ isAdmin: false });
     }
   };
