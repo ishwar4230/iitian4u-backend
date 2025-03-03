@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken } = require("../controllers/adminController");
+const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken, getUpcomingSessions } = require("../controllers/adminController");
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.post("/admin-login", (req, res) => {
     res.cookie("adminToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None", // Required for cross-site cookies
+      // sameSite: "None", // Required for cross-site cookies
       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
     });
     return res.json({ message: "Login successful" });
@@ -39,4 +39,5 @@ router.post("/add-plan", adminMiddleware, addPlan);
 router.post("/add-price", adminMiddleware, addPrice);
 router.post("/add-userplan", adminMiddleware, addUserPlan);
 router.get("/verify-admin-token", adminMiddleware, verifyAdminToken);
+router.get("/get-upcoming-sessions",adminMiddleware,getUpcomingSessions);
 module.exports = router;

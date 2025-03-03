@@ -3,6 +3,19 @@ const Session = require("../models/Session");
 const Course = require("../models/Course");
 const UserPlan = require("../models/UserPlan");
 const Plan = require("../models/Plan");
+const User = require("../models/User"); // Import User model
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false, // Keep false for port 587 (TLS)
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
 
 exports.getSlots = async (req, res) => {
   try {
@@ -41,6 +54,11 @@ exports.bookSlot = async (req, res) => {
 
     if (!slot_id || !course_type || !course_name) {
       return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
     const slot = await Slot.findById(slot_id);
@@ -118,6 +136,34 @@ exports.bookSlot = async (req, res) => {
 
     // Mark the slot as booked instead of deleting it
     await Slot.findByIdAndUpdate(slot_id, { booked: true });
+
+    // Convert comma-separated emails into an array
+    const adminEmails = process.env.ADMIN_EMAILS.split(",");
+
+    // Email details
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: adminEmails, // Array of recipients
+      subject: "New Slot Booking Confirmation",
+      html: `
+    <h2>New Slot Booked</h2>
+    <p><strong>User Name:</strong> ${user.name}</p>
+    <p><strong>Phone:</strong> ${user.phone}</p>
+    <p><strong>Course Type:</strong> ${course_type}</p>
+    <p><strong>Course Name:</strong> ${course_name}</p>
+    <p><strong>Start Time:</strong> ${slot.start_time.toLocaleString()}</p>
+  `
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
 
     res.json({ message: "Slot booked successfully", session: newSession, userPlan });
   } catch (error) {

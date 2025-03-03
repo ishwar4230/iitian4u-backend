@@ -53,3 +53,36 @@ exports.getPrice = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getCheckoutPrice = async (req, res) => {
+  try {
+    const { course_type, course_name, plan_type } = req.query;
+    
+    if (!course_type || !course_name || !plan_type) {
+      return res.status(400).json({ error: "Missing required query parameters." });
+    }
+
+    // Find the course ID
+    const course = await Course.findOne({ course_type, course_name });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found." });
+    }
+
+    // Find the plan ID
+    const plan = await Plan.findOne({ course_type, plan_type });
+    if (!plan) {
+      return res.status(404).json({ error: "Plan not found." });
+    }
+
+    // Find the price entry
+    const priceEntry = await Price.findOne({ course_id: course._id, plan_id: plan._id });
+    if (!priceEntry) {
+      return res.status(404).json({ error: "Price not found for the selected course and plan." });
+    }
+
+    return res.json({ price: priceEntry.price });
+  } catch (error) {
+    console.error("Error fetching checkout price:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};

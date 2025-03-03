@@ -3,6 +3,8 @@ const Plan = require("../models/Plan");
 const Price = require("../models/Price");
 const UserPlan = require("../models/UserPlan");
 const Slot = require("../models/Slot");
+const Session = require("../models/Session");
+const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 const convertISTDateTimeToUTC = (dateString, timeString) => {
@@ -11,6 +13,17 @@ const convertISTDateTimeToUTC = (dateString, timeString) => {
   
     const istDate = new Date(Date.UTC(year, month - 1, day, hours, minutes)); // Create Date in UTC
     return new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000)); // Convert IST to UTC
+  };
+
+  const convertUTCtoIST = (utcDate) => {
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST Offset in milliseconds
+    const istDate = new Date(utcDate.getTime() + istOffset);
+    
+    // Format to YYYY-MM-DD and HH:mm
+    const dateStr = istDate.toISOString().split("T")[0]; 
+    const timeStr = istDate.toISOString().split("T")[1].substring(0, 5);
+    
+    return { start_date: dateStr, start_time: timeStr };
   };
 
 // Add Course
@@ -146,5 +159,50 @@ exports.addSlot = async (req, res) => {
       }
     } catch (error) {
       return res.json({ isAdmin: false });
+    }
+  };
+
+  exports.getUpcomingSessions = async (req, res) => {
+    try {
+      const now = new Date();
+  
+      // Fetch all sessions where slot's start_time is in the future
+      const sessions = await Session.find()
+        .populate({
+          path: "user_id",
+          select: "name phone", // Fetch only name & phone
+        })
+        .populate({
+          path: "slot_id",
+          select: "start_time", // Fetch only start_time
+        })
+        .populate({
+          path: "course_id",
+          select: "course_type course_name", // Fetch course type & name
+        });
+  
+      // Filter only upcoming sessions (start_time > now)
+      const upcomingSessions = sessions.filter(session => 
+        session.slot_id && new Date(session.slot_id.start_time) > now
+      );
+  
+      // Format response
+      const sessionData = upcomingSessions.map(session => {
+        const { start_date, start_time } = convertUTCtoIST(session.slot_id.start_time);
+  
+        return {
+          user_name: session.user_id.name,
+          user_phone: session.user_id.phone,
+          start_date,
+          start_time,
+          course_type: session.course_id.course_type,
+          course_name: session.course_id.course_name,
+        };
+      });
+  
+      res.status(200).json({ sessions: sessionData });
+    } catch (error) {
+      console.error("Error fetching upcoming sessions:", error);
+      res.status(500).json({ error: "Failed to fetch upcoming sessions" });
     }
   };
