@@ -17,7 +17,7 @@ router.post("/admin-login", (req, res) => {
     res.cookie("adminToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None", // Required for cross-site cookies
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
     });
     return res.json({ message: "Login successful" });
