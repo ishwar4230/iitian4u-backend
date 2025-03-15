@@ -6,6 +6,17 @@ const Plan = require("../models/Plan");
 const User = require("../models/User"); // Import User model
 const nodemailer = require("nodemailer");
 
+const convertUTCtoIST = (utcDate) => {
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST Offset in milliseconds
+  const istDate = new Date(utcDate.getTime() + istOffset);
+
+  // Format to YYYY-MM-DD and HH:mm
+  const dateStr = istDate.toISOString().split("T")[0];
+  const timeStr = istDate.toISOString().split("T")[1].substring(0, 5);
+
+  return { start_date: dateStr, start_time: timeStr };
+};
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -139,7 +150,7 @@ exports.bookSlot = async (req, res) => {
 
     // Convert comma-separated emails into an array
     const adminEmails = process.env.ADMIN_EMAILS.split(",");
-
+    const { start_date, start_time } = convertUTCtoIST(slot.start_time);
     // Email details
     const mailOptions = {
       from: process.env.SMTP_USER,
@@ -151,7 +162,8 @@ exports.bookSlot = async (req, res) => {
     <p><strong>Phone:</strong> ${user.phone}</p>
     <p><strong>Course Type:</strong> ${course_type}</p>
     <p><strong>Course Name:</strong> ${course_name}</p>
-    <p><strong>Start Time:</strong> ${slot.start_time.toLocaleString()}</p>
+    <p><strong>Slot Date:</strong> ${start_date}</p>
+    <p><strong>Slot Time:</strong> ${start_time}</p>
   `
     };
 

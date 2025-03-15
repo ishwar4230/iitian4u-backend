@@ -1,10 +1,64 @@
- const User = require("../models/User");
+const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Otp = require("../models/Otp");
+const nodemailer = require("nodemailer");
 
- const register = async (req, res) => {
+// Setup Nodemailer Transport
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false, // Keep false for port 587 (TLS)
+  auth: {
+    user: process.env.OTP_SMTP_USER,
+    pass: process.env.OTP_SMTP_PASS
+  }
+});
+
+const getOtp = async (req, res) => {
   try {
-    const { name, email,phone, password } = req.body;
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    // Generate a random 6-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000);
+
+    // Set OTP expiration time (5 minutes from now)
+    // const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    // Upsert OTP (Create or Update if email exists)
+    await Otp.findOneAndUpdate(
+      { email },
+      { otp, createdAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    const mailOptions = {
+      from: process.env.OTP_SMTP_USER,
+      to: email, // Array of recipients
+      subject: "Your OTP for Registration at IITians4u",
+      text: `Your OTP is: ${otp}. It will expire in 5 minutes.`
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+const register = async (req, res) => {
+  try {
+    const { name, email, phone, password, otp } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
@@ -12,11 +66,20 @@ const jwt = require("jsonwebtoken");
       return res.status(400).json({ message: "Email or phone already registered" });
     }
 
+    // Verify OTP
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord) {
+      return res.status(400).json({ message: "OTP not found or expired" });
+    }
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const newUser = await User.create({ name, email,phone, password: hashedPassword });
+    const newUser = await User.create({ name, email, phone, password: hashedPassword });
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -24,10 +87,10 @@ const jwt = require("jsonwebtoken");
   }
 };
 
- const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    
+
     // Find user
     const user = await User.findOne({ phone });
     if (!user) return res.status(400).json({ message: "User not exist" });
@@ -43,28 +106,28 @@ const jwt = require("jsonwebtoken");
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.cookie("token", token, {
-       httpOnly: true,
-       secure: process.env.NODE_ENV === "production",
-       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      });
-    res.json({ message: "Login successful", user: {id: user._id, name: user.name, phone: user.phone } });
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    });
+    res.json({ message: "Login successful", user: { id: user._id, name: user.name, phone: user.phone } });
   } catch (error) {
     // console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
- const logout = (req, res) => {
-  try{
-  res.cookie("token","", {
-     httpOnly: true,
-     secure: process.env.NODE_ENV === "production",
-     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-     expires: new Date(0), // Expire immediately
+const logout = (req, res) => {
+  try {
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      expires: new Date(0), // Expire immediately
 
     });
-  res.json({ message: "Logged out successfully" });
+    res.json({ message: "Logged out successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
@@ -91,4 +154,4 @@ const verify = (req, res) => {
   }
 }
 
-module.exports = { register, login, logout, verify };
+module.exports = { register, login, logout, verify, getOtp };
