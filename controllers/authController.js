@@ -36,7 +36,7 @@ const getOtp = async (req, res) => {
     const mailOptions = {
       from: process.env.OTP_SMTP_USER,
       to: email, // Array of recipients
-      subject: "Your OTP for Registration at IITians4u",
+      subject: "Your OTP for Verification at IITians4u",
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`
     };
 
@@ -80,6 +80,7 @@ const register = async (req, res) => {
 
     // Create new user
     const newUser = await User.create({ name, email, phone, password: hashedPassword });
+    await Otp.deleteOne({ email });
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -154,4 +155,44 @@ const verify = (req, res) => {
   }
 }
 
-module.exports = { register, login, logout, verify, getOtp };
+const changePassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify OTP
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord) {
+      return res.status(400).json({ message: "OTP not found or expired" });
+    }
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Delete OTP entry after successful password reset
+    await Otp.deleteOne({ email });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { register, login, logout, verify, getOtp, changePassword };
