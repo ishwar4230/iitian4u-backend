@@ -229,3 +229,17 @@ exports.getUpcomingSessions = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch upcoming sessions" });
   }
 };
+
+exports.deleteUnbookedOldSlots = async (req, res) => {
+  try {
+    const now = new Date();
+
+    // Delete all slots where start_time is in the past and booked is false
+    const result = await Slot.deleteMany({ start_time: { $lt: now }, booked: false });
+
+    res.status(200).json({ message: "Old unbooked slots deleted successfully", deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("Error deleting old unbooked slots:", error);
+    res.status(500).json({ error: "Failed to delete old unbooked slots" });
+  }
+};

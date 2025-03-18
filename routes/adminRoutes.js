@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken, getUpcomingSessions } = require("../controllers/adminController");
+const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken, getUpcomingSessions, deleteUnbookedOldSlots } = require("../controllers/adminController");
 
 const router = express.Router();
 
@@ -40,4 +40,5 @@ router.post("/add-price", adminMiddleware, addPrice);
 router.post("/add-userplan", adminMiddleware, addUserPlan);
 router.get("/verify-admin-token", adminMiddleware, verifyAdminToken);
 router.get("/get-upcoming-sessions",adminMiddleware,getUpcomingSessions);
+router.delete("/delete-old-slots",adminMiddleware, deleteUnbookedOldSlots);
 module.exports = router;
