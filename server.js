@@ -12,6 +12,7 @@ const planRoutes = require("./routes/planRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const priceRoutes = require('./routes/priceRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const collegePredictRoutes = require("./routes/collegePredictRoutes");
 dotenv.config();
 // connectDB();
 
@@ -32,6 +33,7 @@ app.use("/slot",slotRoutes);
 app.use("/session",sessionRoutes);
 app.use("/price",priceRoutes);
 app.use("/payment",paymentRoutes);
+app.use("/predictor",collegePredictRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
