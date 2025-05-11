@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const excelLoader = require('./controllers/excelLoader');
 // const connectDB = require("./config/db");
 require("./config/db");
 const authRoutes = require("./routes/authRoutes");
@@ -19,6 +20,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+excelLoader.loadExcelData();
 app.use(
     cors({
       origin: ["https://iitians4u.in", "https://iitians4u.netlify.app/"], // Allow your frontend domains

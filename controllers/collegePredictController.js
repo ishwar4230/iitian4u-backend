@@ -1,6 +1,7 @@
 const xlsx = require('xlsx');
 const path = require('path');
 const Predictor = require("../models/Predictor");
+const excelLoader = require('./excelLoader');
 
 exports.predictIIT_IIITs = (req, res) => {
     const { jee_rank, category, gender } = req.query;
@@ -9,15 +10,16 @@ exports.predictIIT_IIITs = (req, res) => {
       return res.status(400).json({ error: 'Missing required query parameters' });
     }
   
-    const filePath = path.join(__dirname, '../data/JoSAA-2024.xlsx');
-    const workbook = xlsx.readFile(filePath);
-    let sheet='';
-    if(req.url.startsWith('/predict-iits'))
-      sheet = workbook.Sheets['IITs_2024'];
-    else
-      sheet = workbook.Sheets['IIITs_2024'];
-    const data = xlsx.utils.sheet_to_json(sheet);
+    // const filePath = path.join(__dirname, '../data/JoSAA-2024.xlsx');
+    // const workbook = xlsx.readFile(filePath);
+    // let sheet='';
+    // if(req.url.startsWith('/predict-iits'))
+    //   sheet = workbook.Sheets['IITs_2024'];
+    // else
+    //   sheet = workbook.Sheets['IIITs_2024'];
+    // const data = xlsx.utils.sheet_to_json(sheet);
     // console.log(data.length);
+    const data = req.url.startsWith('/predict-iits') ? excelLoader.getIITData() : excelLoader.getIIITData();
     const rank = parseInt(jee_rank);
     const results = [];
   
@@ -51,16 +53,17 @@ exports.predictIIT_IIITs = (req, res) => {
       return res.status(400).json({ error: 'Missing required query parameters' });
     }
   
-    const filePath = path.join(__dirname, '../data/JoSAA-2024.xlsx');
-    const workbook = xlsx.readFile(filePath);
-    let sheet = '';
+    // const filePath = path.join(__dirname, '../data/JoSAA-2024.xlsx');
+    // const workbook = xlsx.readFile(filePath);
+    // let sheet = '';
   
-    if (req.url.startsWith('/predict-nits'))
-      sheet = workbook.Sheets['NITs_2024'];
-    else
-      sheet = workbook.Sheets['GFTIs_2024'];
+    // if (req.url.startsWith('/predict-nits'))
+    //   sheet = workbook.Sheets['NITs_2024'];
+    // else
+    //   sheet = workbook.Sheets['GFTIs_2024'];
   
-    const data = xlsx.utils.sheet_to_json(sheet);
+    // const data = xlsx.utils.sheet_to_json(sheet);
+    const data = req.url.startsWith('/predict-nits') ? excelLoader.getNITData() : excelLoader.getGFTIData();
     const rank = parseInt(jee_rank);
     const results = [];
   
