@@ -6,6 +6,7 @@ const Slot = require("../models/Slot");
 const Session = require("../models/Session");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const Predictor = require("../models/Predictor");
 
 const convertISTDateTimeToUTC = (dateString, timeString) => {
   const [year, month, day] = dateString.split("-").map(Number); // Extract YYYY-MM-DD
@@ -241,6 +242,31 @@ exports.deleteUnbookedOldSlots = async (req, res) => {
   } catch (error) {
     console.error("Error deleting old unbooked slots:", error);
     res.status(500).json({ error: "Failed to delete old unbooked slots" });
+  }
+};
+
+exports.getPredictorData = async (req, res) => {
+  try {
+    // console.log('call came');
+    // Fetch all predictor data
+    const predictors = await Predictor.find().sort({ createdAt: -1 }); // Sort by latest first
+
+    // Format the response (optional, for better readability)
+    const formattedData = predictors.map(predictor => ({
+      mobile: predictor.mobile,
+      jee_main_rank: predictor.jee_main_rank || "N/A",
+      jee_adv_rank: predictor.jee_adv_rank || "N/A",
+      category: predictor.category || "N/A",
+      gender: predictor.gender || "N/A",
+      state: predictor.state || "N/A",
+      created_at: predictor.createdAt.toLocaleString(),
+      updated_at: predictor.updatedAt.toLocaleString(),
+    }));
+
+    res.status(200).json({ data: formattedData });
+  } catch (error) {
+    console.error("Error fetching predictor data:", error);
+    res.status(500).json({ error: "Failed to fetch predictor data" });
   }
 };
 //dummy line
