@@ -1,7 +1,9 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken, getUpcomingSessions, deleteUnbookedOldSlots, getPredictorData } = require("../controllers/adminController");
+const { addCourse, addPlan, addPrice, addUserPlan, addSlot, verifyAdminToken, getUpcomingSessions, deleteUnbookedOldSlots, getPredictorData
+  , getAllUsers, getAllPayments, getAllUserPlans
+ } = require("../controllers/adminController");
 
 const router = express.Router();
 
@@ -42,4 +44,8 @@ router.get("/verify-admin-token", adminMiddleware, verifyAdminToken);
 router.get("/get-upcoming-sessions",adminMiddleware,getUpcomingSessions);
 router.delete("/delete-old-slots",adminMiddleware, deleteUnbookedOldSlots);
 router.get("/get-predictor-data", adminMiddleware, getPredictorData);
+router.get("/get-all-users", adminMiddleware, getAllUsers);
+router.get("/get-all-payments", adminMiddleware, getAllPayments);
+router.get("/get-all-userplans", adminMiddleware, getAllUserPlans);
+
 module.exports = router;

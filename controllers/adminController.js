@@ -7,6 +7,7 @@ const Session = require("../models/Session");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const Predictor = require("../models/Predictor");
+const Payment = require("../models/Payment");
 
 const convertISTDateTimeToUTC = (dateString, timeString) => {
   const [year, month, day] = dateString.split("-").map(Number); // Extract YYYY-MM-DD
@@ -267,6 +268,84 @@ exports.getPredictorData = async (req, res) => {
   } catch (error) {
     console.error("Error fetching predictor data:", error);
     res.status(500).json({ error: "Failed to fetch predictor data" });
+  }
+};
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, "-password");
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to fetch users" });
+  }
+};
+
+// Get all payments with user info
+exports.getAllPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({})
+      .populate("user_id", "name email phone")
+      .lean();
+
+    const formattedPayments = payments.map((payment) => ({
+      user_name: payment.user_id.name,
+      user_email: payment.user_id.email,
+      user_phone: payment.user_id.phone,
+      payment_id: payment.payment_id,
+      order_id: payment.order_id,
+      amount: payment.amount,
+      payment_time: payment.payment_time,
+    }));
+
+    res.status(200).json({ success: true, data: formattedPayments });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to fetch payments" });
+  }
+};
+
+// Get all user plans with user and plan details
+exports.getAllUserPlans = async (req, res) => {
+  try {
+    const userPlans = await UserPlan.find({})
+      .populate("user_id", "name email phone")
+      .lean();
+
+    const formattedUserPlans = await Promise.all(
+      userPlans.map(async (userPlan) => {
+        const { user_id, plan_data } = userPlan;
+        
+        const formattedPlans = await Promise.all(
+          plan_data.map(async (plan) => {
+            // Fetch course and plan details
+            const course = await Course.findById(plan.course_id).lean();
+            const planDetails = await Plan.findById(plan.plan_id).lean();
+
+            return {
+              course_type: course.course_type,
+              course_name: course.course_name,
+              plan_type: planDetails.plan_type,
+              remaining_slots: plan.remaining_slots,
+              payment_time: plan.payment_time,
+            };
+          })
+        );
+
+        return {
+          user_name: user_id.name,
+          user_email: user_id.email,
+          user_phone: user_id.phone,
+          plans: formattedPlans,
+        };
+      })
+    );
+
+    res.status(200).json({ success: true, data: formattedUserPlans });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to fetch user plans" });
   }
 };
 //dummy line
