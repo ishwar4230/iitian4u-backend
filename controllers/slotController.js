@@ -111,7 +111,7 @@ exports.bookSlot = async (req, res) => {
 
         // Check plan expiry
         let isExpired = false;
-        if (planDetails.plan_type !== "one_time" && planDetails.plan_type !== "life_time") {
+        if (planDetails.plan_type !== "one_time" && planDetails.plan_type !== "end_to_end") {
           let expiryDate = new Date(plan.payment_time);
 
           if (planDetails.plan_type === "monthly") expiryDate.setMonth(expiryDate.getMonth() + 1);

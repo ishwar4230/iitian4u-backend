@@ -4,7 +4,7 @@ const Course = require("../models/Course");
 
 // Function to calculate expiry time
 const getPlanExpiryTime = (planType, paymentTime) => {
-  if (planType === "one_time" || planType === "life_time") {
+  if (planType === "one_time" || planType === "end_to_end") {
     return null; // These plans don't expire
   }
 
@@ -24,7 +24,7 @@ const getPlanExpiryTime = (planType, paymentTime) => {
 
 // Function to check if a plan is expired
 const isPlanExpired = (planType, paymentTime) => {
-  if (planType === "one_time" || planType === "life_time") {
+  if (planType === "one_time" || planType === "end_to_end") {
     return false; // These never expire
   }
 
