@@ -13,6 +13,7 @@ const planRoutes = require("./routes/planRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const priceRoutes = require('./routes/priceRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const guestPaymentRoutes=require('./routes/guestPaymentRoutes');
 const collegePredictRoutes = require("./routes/collegePredictRoutes");
 dotenv.config();
 // connectDB();
@@ -22,11 +23,11 @@ app.use(express.json());
 app.use(cookieParser());
 excelLoader.loadExcelData();
 app.use(
-    cors({
-      origin: ["https://iitians4u.in", "https://iitians4u.netlify.app/"], // Allow your frontend domains
-      credentials: true,
-    })
-  );
+  cors({
+    origin: ["https://iitians4u.in", "https://iitians4u.netlify.app/"], // Allow your frontend domains
+    credentials: true,
+  })
+);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/admin", adminRoutes);
@@ -35,6 +36,7 @@ app.use("/slot",slotRoutes);
 app.use("/session",sessionRoutes);
 app.use("/price",priceRoutes);
 app.use("/payment",paymentRoutes);
+app.use("/guestPayment",guestPaymentRoutes);
 app.use("/predictor",collegePredictRoutes);
 
 const PORT = process.env.PORT || 5000;
